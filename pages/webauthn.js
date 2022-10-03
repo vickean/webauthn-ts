@@ -3,25 +3,29 @@ let printed_data = {}
 // This function starts the registration of a new Credential at the users' client.
 // It completes steps 1 + 2 of the specification before sending all data to the server for further processing.
 // The specification can be found here: https://w3c.github.io/webauthn/#sctn-registering-a-new-credential
-async function register(userId, userName, pin) {
+async function register(userName, pin) {
     try {
         // To create a new credential that is conformed with the WebAuthn standard, we have to provide some options.
         // A complete overview over all options can be found here: https://w3c.github.io/webauthn/#dictionary-makecredentialoptions
         // response in session/new --> registerRequest
-        const publicKeyCredentialCreationOptions =
-            await getServerSideCreationOptions()
+        const publicKeyCredentialCreationOptions = await getServerSideCreationOptions(userName)
 
         const el_json_print = document.getElementById('jsonPrint')
         Object.assign(printed_data, {
-            '/session/new': {
-                payload: { userName: userName, pin: pin },
-                response: {
-                    userName: userName,
-                    pin: pin,
-                    registerRequest: publicKeyCredentialCreationOptions,
-                },
+            '/webauthn/preregister': {
+                payload: { userName },
+                response: publicKeyCredentialCreationOptions,
             },
         })
+
+		// converting challenge from base64 to base64url
+		publicKeyCredentialCreationOptions.challenge = base64ToBase64url(publicKeyCredentialCreationOptions.challenge)
+
+		// >>> debug logging
+		clonedPrintedData = JSON.parse(JSON.stringify(printed_data))
+		console.log("clonedPrintedData: ", clonedPrintedData)
+		console.log("PrintedData: ", printed_data)
+
         if (el_json_print) {
             el_json_print.classList.add('border')
             el_json_print.classList.add('border-2')
@@ -31,26 +35,34 @@ async function register(userId, userName, pin) {
             el_json_print.innerHTML = prettyPrintJson.toHtml(printed_data)
         }
 
+		// storing userId from backend
+		document.cookie = 'userId=' + publicKeyCredentialCreationOptions.user.id
+
         publicKeyCredentialCreationOptions.challenge = Uint8Array.from(
             publicKeyCredentialCreationOptions.challenge,
             (c) => c.charCodeAt(0)
         ).buffer
         publicKeyCredentialCreationOptions.user.id = Uint8Array.from(
-            userId,
+            publicKeyCredentialCreationOptions.user.id,
             (c) => c.charCodeAt(0)
         )
-        publicKeyCredentialCreationOptions.user.name = userName
-        publicKeyCredentialCreationOptions.user.displayName = userName
-        publicKeyCredentialCreationOptions.authenticatorSelection.authenticatorAttachment =
-            'cross-platform'
-        publicKeyCredentialCreationOptions.authenticatorSelection.userVerification =
-            'required'
+
+		// items below will be handled in backend
+        // publicKeyCredentialCreationOptions.user.name = userName
+        // publicKeyCredentialCreationOptions.user.displayName = userName
+        // publicKeyCredentialCreationOptions.authenticatorSelection.authenticatorAttachment =
+        //     'cross-platform'
+        // publicKeyCredentialCreationOptions.authenticatorSelection.userVerification =
+        //     'required'
 
         // Here a new credential is created which means the client verifies the user (e.g. through YubiKey) and asks for consent to store a new login credential for this website.
         // If the user agrees, a new credentialObject is scheduled.
         const credential = await navigator.credentials.create({
             publicKey: publicKeyCredentialCreationOptions,
         })
+		
+		// >>>
+		console.log("credential: ", credential)
 
         // Response from navigator.credentials.create will be used for attestation below
         let rawId = new Uint8Array(credential.rawId)
@@ -68,7 +80,10 @@ async function register(userId, userName, pin) {
             ),
         }
 
-        fetch('/authentication/register', {
+		// >>> debug logging
+		console.log("attestation: ", attestation)
+
+        fetch('https://5fdv21d092.execute-api.ap-southeast-1.amazonaws.com/victor/webauthn/register', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -76,6 +91,7 @@ async function register(userId, userName, pin) {
             redirect: 'follow',
             referrer: 'no-referrer',
             body: JSON.stringify({
+				userName,
                 pkc: attestation,
             }),
         }).then((resp) => {
@@ -89,8 +105,8 @@ async function register(userId, userName, pin) {
                 })
             }
             Object.assign(printed_data, {
-                '/session/webauthn/device': {
-                    payload: { pkc: attestation },
+                '/webauthn/register': {
+                    payload: { userName, pkc: attestation },
                     response: { status: resp.status, ok: resp.ok },
                 },
             })
@@ -100,6 +116,7 @@ async function register(userId, userName, pin) {
         })
     } catch (e) {
         document.getElementById('error').innerHTML = e
+		console.log(e)
     }
 }
 
@@ -111,26 +128,39 @@ async function login(userId, userName) {
         // To create a new credential that is conformed with the WebAuthn standard, we have to provide some options.
         // A complete overview over all options can be found here: https://w3c.github.io/webauthn/#dictionary-assertion-options
         const publicKeyCredentialRequestOptions =
-            await getServerSideRequestOptions()
+            await getServerSideRequestOptions(userName)
 
+		// >>> debug logging
+		clonedOptions = JSON.parse(JSON.stringify(publicKeyCredentialRequestOptions))
+		console.log("clonedOptions: ", clonedOptions)
+
+		// converting challenge from base64 to base64url
+		publicKeyCredentialRequestOptions.challenge = base64ToBase64url(publicKeyCredentialRequestOptions.challenge)
+		publicKeyCredentialRequestOptions.allowCredentials[0].id = bufferDecode(atob(publicKeyCredentialRequestOptions.allowCredentials[0].id))
+
+		
+		// >>> debug logging
+		clonedOptions2 = JSON.parse(JSON.stringify(publicKeyCredentialRequestOptions))
+		console.log("clonedOptions2: ", clonedOptions2)
+		
         publicKeyCredentialRequestOptions.challenge = Uint8Array.from(
-            publicKeyCredentialRequestOptions.challenge,
+			publicKeyCredentialRequestOptions.challenge,
             (c) => c.charCodeAt(0)
-        ).buffer
-        publicKeyCredentialRequestOptions.allowCredentials[0].id = bufferDecode(
-            publicKeyCredentialRequestOptions.allowCredentials[0].id
-        )
-        publicKeyCredentialRequestOptions.userVerification = 'required'
+			).buffer
+		// publicKeyCredentialRequestOptions.allowCredentials[0].id = Uint8Array.from(
+		// 	publicKeyCredentialRequestOptions.allowCredentials[0].id,
+		// 	(c) => c.charCodeAt(0))
+		// publicKeyCredentialRequestOptions.userVerification = 'required'
+
+		// >>> debug logging
+		clonedOptions3 = JSON.parse(JSON.stringify(publicKeyCredentialRequestOptions))
+		console.log("clonedOptions3: ", clonedOptions3)
 
         const el_json_print = document.getElementById('jsonPrint')
         Object.assign(printed_data, {
-            '/session/new': {
+            '/webauthn/prelogin': {
                 payload: { userName: userName },
-                response: {
-                    userName: userName,
-                    userId: userId,
-                    signRequest: publicKeyCredentialRequestOptions,
-                },
+                response: publicKeyCredentialRequestOptions,
             },
         })
         if (el_json_print) {
@@ -146,6 +176,9 @@ async function login(userId, userName) {
         const assertion = await navigator.credentials.get({
             publicKey: publicKeyCredentialRequestOptions,
         })
+
+		// >>>
+		console.log("assertion: ", assertion)
 
         // The credential object is secured by the client and can for example not be sent directly to the server.
         // Therefore, we extract all relevant information from the object, transform it to a securely encoded and server-interpretable format and then send it to our server for further verification.
@@ -164,7 +197,13 @@ async function login(userId, userName) {
             },
         }
 
-        fetch('/authentication/login', {
+		// >>>
+		console.log("loginBody: ", {
+			userName,
+			pkc: readableAssertion,
+		})
+
+        fetch('https://5fdv21d092.execute-api.ap-southeast-1.amazonaws.com/victor/webauthn/login', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -172,6 +211,7 @@ async function login(userId, userName) {
             redirect: 'follow',
             referrer: 'no-referrer',
             body: JSON.stringify({
+				userName,
                 pkc: readableAssertion,
             }),
         }).then((resp) => {
@@ -183,8 +223,8 @@ async function login(userId, userName) {
                 })
             }
             Object.assign(printed_data, {
-                '/session/webauth/new': {
-                    payload: { pkc: readableAssertion },
+                '/webauthn/login': {
+                    payload: { userName, pkc: readableAssertion },
                     response: { status: resp.status, ok: resp.ok },
                 },
             })
@@ -194,6 +234,7 @@ async function login(userId, userName) {
         })
     } catch (e) {
         document.getElementById('error').innerHTML = e
+		console.log(e)
     }
 }
 
@@ -205,13 +246,35 @@ This way, when we receive the public key on our server, we can correlate that ke
 By that, we can mitigate replay attacks as every challenge can only be used once to create a public key.
 For more details, see https://w3c.github.io/webauthn/#sctn-cryptographic-challenges
 */
-async function getServerSideCreationOptions() {
-    let resp = await fetch('/authentication/creationOptions')
+async function getServerSideCreationOptions(userName) {
+    // let resp = await fetch('/authentication/creationOptions')
+    let resp = await fetch('https://5fdv21d092.execute-api.ap-southeast-1.amazonaws.com/victor/webauthn/preregister', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+		},
+		redirect: 'follow',
+		referrer: 'no-referrer',
+		body: JSON.stringify({
+			userName,
+		}),
+	})
     return await resp.json()
 }
 
-async function getServerSideRequestOptions() {
-    let resp = await fetch('/authentication/requestOptions')
+async function getServerSideRequestOptions(userName) {
+    // let resp = await fetch('/authentication/requestOptions')
+	let resp = await fetch('https://5fdv21d092.execute-api.ap-southeast-1.amazonaws.com/victor/webauthn/prelogin', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+		},
+		redirect: 'follow',
+		referrer: 'no-referrer',
+		body: JSON.stringify({
+			userName,
+		}),
+	})
     return await resp.json()
 }
 
@@ -229,14 +292,17 @@ function arrayBufferToString(arrayBuffer) {
 
 // Gathers all necessary parameters for register() and sets a user cookie to assign user an ID for their "account".
 // This ID is only used at the client-side and is only required to tell the browser with which account the user should be verified (logged in).
+// Will use userId from DB instead - Victor
 function startRegistration() {
-    let uid = generateId()
-    document.cookie = 'userId=' + uid
+    // let uid = generateId()
+    // document.cookie = 'userId=' + uid
     let uname = document.getElementById('uname').value
     let pin = document.getElementById('password').value
-    if (uname && uid) {
+    // if (uname && uid) {
+	if (uname) {
         disableBtn()
-        register(uid, uname, pin)
+        // register(uid, uname, pin)
+        register(uname, pin)
     } else console.error('Parameters missing!')
 }
 
@@ -280,4 +346,12 @@ function bufferEncode(value) {
 function bufferDecode(value) {
     value = value.replace(/\-/g, '+').replace(/\_/g, '/')
     return Uint8Array.from(atob(value), (c) => c.charCodeAt(0))
+}
+
+// Function to convert base64 string to base64url string
+function base64ToBase64url(input) {
+	return input
+		.replace(/\+/g, '-')
+    	.replace(/\//g, '_')
+    	.replace(/=+$/g, '')
 }
