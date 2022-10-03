@@ -1,3 +1,5 @@
+const endpointServerURL =
+    'https://5fdv21d092.execute-api.ap-southeast-1.amazonaws.com/victor'
 let printed_data = {}
 
 // This function starts the registration of a new Credential at the users' client.
@@ -8,7 +10,8 @@ async function register(userName, pin) {
         // To create a new credential that is conformed with the WebAuthn standard, we have to provide some options.
         // A complete overview over all options can be found here: https://w3c.github.io/webauthn/#dictionary-makecredentialoptions
         // response in session/new --> registerRequest
-        const publicKeyCredentialCreationOptions = await getServerSideCreationOptions(userName)
+        const publicKeyCredentialCreationOptions =
+            await getServerSideCreationOptions(userName)
 
         const el_json_print = document.getElementById('jsonPrint')
         Object.assign(printed_data, {
@@ -18,13 +21,15 @@ async function register(userName, pin) {
             },
         })
 
-		// converting challenge from base64 to base64url
-		publicKeyCredentialCreationOptions.challenge = base64ToBase64url(publicKeyCredentialCreationOptions.challenge)
+        // converting challenge from base64 to base64url
+        publicKeyCredentialCreationOptions.challenge = base64ToBase64url(
+            publicKeyCredentialCreationOptions.challenge
+        )
 
-		// >>> debug logging
-		clonedPrintedData = JSON.parse(JSON.stringify(printed_data))
-		console.log("clonedPrintedData: ", clonedPrintedData)
-		console.log("PrintedData: ", printed_data)
+        // >>> debug logging
+        clonedPrintedData = JSON.parse(JSON.stringify(printed_data))
+        console.log('clonedPrintedData: ', clonedPrintedData)
+        console.log('PrintedData: ', printed_data)
 
         if (el_json_print) {
             el_json_print.classList.add('border')
@@ -35,8 +40,8 @@ async function register(userName, pin) {
             el_json_print.innerHTML = prettyPrintJson.toHtml(printed_data)
         }
 
-		// storing userId from backend
-		document.cookie = 'userId=' + publicKeyCredentialCreationOptions.user.id
+        // storing userId from backend
+        document.cookie = 'userId=' + publicKeyCredentialCreationOptions.user.id
 
         publicKeyCredentialCreationOptions.challenge = Uint8Array.from(
             publicKeyCredentialCreationOptions.challenge,
@@ -47,7 +52,7 @@ async function register(userName, pin) {
             (c) => c.charCodeAt(0)
         )
 
-		// items below will be handled in backend
+        // items below will be handled in backend
         // publicKeyCredentialCreationOptions.user.name = userName
         // publicKeyCredentialCreationOptions.user.displayName = userName
         // publicKeyCredentialCreationOptions.authenticatorSelection.authenticatorAttachment =
@@ -60,9 +65,9 @@ async function register(userName, pin) {
         const credential = await navigator.credentials.create({
             publicKey: publicKeyCredentialCreationOptions,
         })
-		
-		// >>>
-		console.log("credential: ", credential)
+
+        // >>>
+        console.log('credential: ', credential)
 
         // Response from navigator.credentials.create will be used for attestation below
         let rawId = new Uint8Array(credential.rawId)
@@ -80,10 +85,10 @@ async function register(userName, pin) {
             ),
         }
 
-		// >>> debug logging
-		console.log("attestation: ", attestation)
+        // >>> debug logging
+        console.log('attestation: ', attestation)
 
-        fetch('https://5fdv21d092.execute-api.ap-southeast-1.amazonaws.com/victor/webauthn/register', {
+        fetch(`${endpointServerURL}/webauthn/register`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -91,7 +96,7 @@ async function register(userName, pin) {
             redirect: 'follow',
             referrer: 'no-referrer',
             body: JSON.stringify({
-				userName,
+                userName,
                 pkc: attestation,
             }),
         }).then((resp) => {
@@ -116,7 +121,7 @@ async function register(userName, pin) {
         })
     } catch (e) {
         document.getElementById('error').innerHTML = e
-		console.log(e)
+        console.log(e)
     }
 }
 
@@ -130,31 +135,40 @@ async function login(userId, userName) {
         const publicKeyCredentialRequestOptions =
             await getServerSideRequestOptions(userName)
 
-		// >>> debug logging
-		clonedOptions = JSON.parse(JSON.stringify(publicKeyCredentialRequestOptions))
-		console.log("clonedOptions: ", clonedOptions)
+        // >>> debug logging
+        clonedOptions = JSON.parse(
+            JSON.stringify(publicKeyCredentialRequestOptions)
+        )
+        console.log('clonedOptions: ', clonedOptions)
 
-		// converting challenge from base64 to base64url
-		publicKeyCredentialRequestOptions.challenge = base64ToBase64url(publicKeyCredentialRequestOptions.challenge)
-		publicKeyCredentialRequestOptions.allowCredentials[0].id = bufferDecode(atob(publicKeyCredentialRequestOptions.allowCredentials[0].id))
+        // converting challenge from base64 to base64url
+        publicKeyCredentialRequestOptions.challenge = base64ToBase64url(
+            publicKeyCredentialRequestOptions.challenge
+        )
+        publicKeyCredentialRequestOptions.allowCredentials[0].id = bufferDecode(
+            atob(publicKeyCredentialRequestOptions.allowCredentials[0].id)
+        )
 
-		
-		// >>> debug logging
-		clonedOptions2 = JSON.parse(JSON.stringify(publicKeyCredentialRequestOptions))
-		console.log("clonedOptions2: ", clonedOptions2)
-		
+        // >>> debug logging
+        clonedOptions2 = JSON.parse(
+            JSON.stringify(publicKeyCredentialRequestOptions)
+        )
+        console.log('clonedOptions2: ', clonedOptions2)
+
         publicKeyCredentialRequestOptions.challenge = Uint8Array.from(
-			publicKeyCredentialRequestOptions.challenge,
+            publicKeyCredentialRequestOptions.challenge,
             (c) => c.charCodeAt(0)
-			).buffer
-		// publicKeyCredentialRequestOptions.allowCredentials[0].id = Uint8Array.from(
-		// 	publicKeyCredentialRequestOptions.allowCredentials[0].id,
-		// 	(c) => c.charCodeAt(0))
-		// publicKeyCredentialRequestOptions.userVerification = 'required'
+        ).buffer
+        // publicKeyCredentialRequestOptions.allowCredentials[0].id = Uint8Array.from(
+        // 	publicKeyCredentialRequestOptions.allowCredentials[0].id,
+        // 	(c) => c.charCodeAt(0))
+        // publicKeyCredentialRequestOptions.userVerification = 'required'
 
-		// >>> debug logging
-		clonedOptions3 = JSON.parse(JSON.stringify(publicKeyCredentialRequestOptions))
-		console.log("clonedOptions3: ", clonedOptions3)
+        // >>> debug logging
+        clonedOptions3 = JSON.parse(
+            JSON.stringify(publicKeyCredentialRequestOptions)
+        )
+        console.log('clonedOptions3: ', clonedOptions3)
 
         const el_json_print = document.getElementById('jsonPrint')
         Object.assign(printed_data, {
@@ -177,8 +191,8 @@ async function login(userId, userName) {
             publicKey: publicKeyCredentialRequestOptions,
         })
 
-		// >>>
-		console.log("assertion: ", assertion)
+        // >>>
+        console.log('assertion: ', assertion)
 
         // The credential object is secured by the client and can for example not be sent directly to the server.
         // Therefore, we extract all relevant information from the object, transform it to a securely encoded and server-interpretable format and then send it to our server for further verification.
@@ -197,13 +211,13 @@ async function login(userId, userName) {
             },
         }
 
-		// >>>
-		console.log("loginBody: ", {
-			userName,
-			pkc: readableAssertion,
-		})
+        // >>>
+        console.log('loginBody: ', {
+            userName,
+            pkc: readableAssertion,
+        })
 
-        fetch('https://5fdv21d092.execute-api.ap-southeast-1.amazonaws.com/victor/webauthn/login', {
+        fetch(`${endpointServerURL}/webauthn/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -211,7 +225,7 @@ async function login(userId, userName) {
             redirect: 'follow',
             referrer: 'no-referrer',
             body: JSON.stringify({
-				userName,
+                userName,
                 pkc: readableAssertion,
             }),
         }).then((resp) => {
@@ -234,7 +248,7 @@ async function login(userId, userName) {
         })
     } catch (e) {
         document.getElementById('error').innerHTML = e
-		console.log(e)
+        console.log(e)
     }
 }
 
@@ -248,33 +262,33 @@ For more details, see https://w3c.github.io/webauthn/#sctn-cryptographic-challen
 */
 async function getServerSideCreationOptions(userName) {
     // let resp = await fetch('/authentication/creationOptions')
-    let resp = await fetch('https://5fdv21d092.execute-api.ap-southeast-1.amazonaws.com/victor/webauthn/preregister', {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-		},
-		redirect: 'follow',
-		referrer: 'no-referrer',
-		body: JSON.stringify({
-			userName,
-		}),
-	})
+    let resp = await fetch(`${endpointServerURL}/webauthn/preregister`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        redirect: 'follow',
+        referrer: 'no-referrer',
+        body: JSON.stringify({
+            userName,
+        }),
+    })
     return await resp.json()
 }
 
 async function getServerSideRequestOptions(userName) {
     // let resp = await fetch('/authentication/requestOptions')
-	let resp = await fetch('https://5fdv21d092.execute-api.ap-southeast-1.amazonaws.com/victor/webauthn/prelogin', {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-		},
-		redirect: 'follow',
-		referrer: 'no-referrer',
-		body: JSON.stringify({
-			userName,
-		}),
-	})
+    let resp = await fetch(`${endpointServerURL}/webauthn/prelogin`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        redirect: 'follow',
+        referrer: 'no-referrer',
+        body: JSON.stringify({
+            userName,
+        }),
+    })
     return await resp.json()
 }
 
@@ -299,7 +313,7 @@ function startRegistration() {
     let uname = document.getElementById('uname').value
     let pin = document.getElementById('password').value
     // if (uname && uid) {
-	if (uname) {
+    if (uname) {
         disableBtn()
         // register(uid, uname, pin)
         register(uname, pin)
@@ -350,8 +364,5 @@ function bufferDecode(value) {
 
 // Function to convert base64 string to base64url string
 function base64ToBase64url(input) {
-	return input
-		.replace(/\+/g, '-')
-    	.replace(/\//g, '_')
-    	.replace(/=+$/g, '')
+    return input.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')
 }
