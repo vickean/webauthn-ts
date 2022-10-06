@@ -1,58 +1,111 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-	<title>WebAuthn POC</title>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<link rel="stylesheet" href="/style.css">
-	<link rel=stylesheet href="https://cdn.jsdelivr.net/npm/pretty-print-json@1.2/dist/pretty-print-json.css">
-	<script src="/base64.js"></script>
-	<script src="/signup.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/pretty-print-json@1.2/dist/pretty-print-json.min.js"></script>
-</head>
+    <head>
+        <title>WebAuthn POC</title>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="stylesheet" href="/style.css" />
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/pretty-print-json@1.2/dist/pretty-print-json.css"
+        />
+        <script src="/base64.js"></script>
+        <script src="/signup.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/pretty-print-json@1.2/dist/pretty-print-json.min.js"></script>
+    </head>
 
-<body>
-	<main class="w-full h-full">
-		<div class="flex flex-col justify-center items-center">
-			<h1 class="font-medium leading-tight text-2xl mt-8 mb-2">WebAuth POC: FIDO U2F Flow</h1>
-			<div class="form min-w-[36em] bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-				<div id="register_flow">
-					<div class="mb-4">
-						<label class="block text-gray-700 text-sm font-bold mb-2" for="uname">
-							Email
-						</label>
-						<input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" type="text" placeholder="test@jirnexu.com" id="uname" oninput="validateForm()">
-					</div>
-					<div class="mb-4">
-						<label class="block text-gray-700 text-sm font-bold mb-2" for="password">
-							Password
-						</label>
-						<input type="password" placeholder="12345" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="password" oninput="validateForm()">
-					</div>
-					<div class="flex items-center justify-center">
-						<button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" disabled onclick="startRegistration()" id="btn">Register</button>
-					</div>
-				</div>
-				<div id="login_flow" class="hidden">
-					<div class="mb-4">
-						<p id="login_text"></p>
-						<p>you may re-authenticate with your security key again by logging in.</p>
-					</div>
-					<div class="flex items-center justify-between">
-						<button id="login" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" onclick="doLogin()">Login</button>
-						<button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" onclick="clearCookies()">Clear Session</button>
-					</div>
-				</div>
-				<div class="mt-2">
-					<p id="error" class="text-red-500 text-xs italic max-w-sm"></p>
-				</div>
-			</div>
-			<div class="flex flex-col w-full justify-center items-center">
-				<pre id="jsonPrint" class="json-container min-w-[36em] max-h-[26em] max-w-[42em] overflow-auto"></pre>
-			</div>
-		</div>
-	</main>
-	<script src="/webauthn.js"></script>
-</body>
-
+    <body>
+        <main class="w-full h-full">
+            <div class="flex flex-col justify-center items-center">
+                <h1 class="font-medium leading-tight text-2xl mt-8 mb-2">
+                    WebAuth POC: FIDO U2F Flow
+                </h1>
+                <div
+                    class="form min-w-[36em] bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4"
+                >
+                    <div id="register_flow">
+                        <div class="mb-4">
+                            <label
+                                class="block text-gray-700 text-sm font-bold mb-2"
+                                for="uname"
+                            >
+                                Email
+                            </label>
+                            <input
+                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                type="text"
+                                placeholder="test@jirnexu.com"
+                                id="uname"
+                                oninput="validateForm()"
+                            />
+                        </div>
+                        <div class="mb-4">
+                            <label
+                                class="block text-gray-700 text-sm font-bold mb-2"
+                                for="password"
+                            >
+                                Six Digit Pin
+                            </label>
+                            <input
+                                type="password"
+                                placeholder="123456"
+                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                id="password"
+                                maxlength="6"
+                                minlength="6"
+                                oninput="validateForm()"
+                            />
+                        </div>
+                        <div class="flex items-center justify-center">
+                            <button
+                                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                                disabled
+                                onclick="startRegistration()"
+                                id="btn"
+                            >
+                                Register
+                            </button>
+                        </div>
+                    </div>
+                    <div id="login_flow" class="hidden">
+                        <div class="mb-4">
+                            <p id="login_text"></p>
+                            <p>
+                                you may re-authenticate with your security key
+                                again by logging in.
+                            </p>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <button
+                                id="login"
+                                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                                onclick="doLogin()"
+                            >
+                                Login
+                            </button>
+                            <button
+                                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                                onclick="clearCookies()"
+                            >
+                                Clear Session
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <p
+                            id="error"
+                            class="text-red-500 text-xs italic max-w-sm"
+                        ></p>
+                    </div>
+                </div>
+                <div class="flex flex-col w-full justify-center items-center">
+                    <pre
+                        id="jsonPrint"
+                        class="json-container min-w-[36em] max-h-[26em] max-w-[42em] overflow-auto"
+                    ></pre>
+                </div>
+            </div>
+        </main>
+        <script src="/webauthn.js"></script>
+    </body>
 </html>

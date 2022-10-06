@@ -11,12 +11,12 @@ async function register(userName, pin) {
         // A complete overview over all options can be found here: https://w3c.github.io/webauthn/#dictionary-makecredentialoptions
         // response in session/new --> registerRequest
         const publicKeyCredentialCreationOptions =
-            await getServerSideCreationOptions(userName)
+            await getServerSideCreationOptions(userName, pin)
 
         const el_json_print = document.getElementById('jsonPrint')
         Object.assign(printed_data, {
             '/webauthn/preregister': {
-                payload: { userName },
+                payload: { userName, pin, service: 'sora' },
                 response: publicKeyCredentialCreationOptions,
             },
         })
@@ -260,17 +260,20 @@ This way, when we receive the public key on our server, we can correlate that ke
 By that, we can mitigate replay attacks as every challenge can only be used once to create a public key.
 For more details, see https://w3c.github.io/webauthn/#sctn-cryptographic-challenges
 */
-async function getServerSideCreationOptions(userName) {
+async function getServerSideCreationOptions(userName, pin) {
     // let resp = await fetch('/authentication/creationOptions')
     let resp = await fetch(`${endpointServerURL}/webauthn/preregister`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
+        credentials: 'include',
         redirect: 'follow',
         referrer: 'no-referrer',
         body: JSON.stringify({
             userName,
+            pin,
+            service: 'sora',
         }),
     })
     return await resp.json()

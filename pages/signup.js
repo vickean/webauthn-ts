@@ -45,7 +45,8 @@ window.addEventListener('load', (event) => {
 function validateForm() {
     if (
         document.getElementById('uname').value !== '' &&
-        document.getElementById('password').value !== ''
+        document.getElementById('password').value !== '' &&
+        document.getElementById('password').value.length == 6
     )
         document.getElementById('btn').removeAttribute('disabled')
     else document.getElementById('btn').setAttribute('disabled', 'true')
