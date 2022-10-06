@@ -5,6 +5,16 @@ import express from 'express'
 import dotenv from 'dotenv'
 import cookies from 'cookie-parser'
 
+import * as fs from 'fs'
+import * as https from 'https'
+
+const key = fs.readFileSync(
+    path.join(__dirname, '..', './src/ssl/sora.dev.ringgitplus.com.key')
+)
+const cert = fs.readFileSync(
+    path.join(__dirname, '..', './src/ssl/sora.dev.ringgitplus.com.crt')
+)
+
 const app = express()
 dotenv.config()
 
@@ -23,6 +33,12 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'pages', 'home.html'))
 })
 
-app.listen(process.env.PORT || 4430, () => {
+const server = https.createServer({ key, cert }, app)
+
+server.listen(process.env.PORT || 4430, () => {
     console.log('Server is running on port 4430!')
 })
+
+// app.listen(process.env.PORT || 4430, () => {
+//     console.log('Server is running on port 4430!')
+// })

@@ -10,8 +10,10 @@ async function register(userName, pin) {
         // To create a new credential that is conformed with the WebAuthn standard, we have to provide some options.
         // A complete overview over all options can be found here: https://w3c.github.io/webauthn/#dictionary-makecredentialoptions
         // response in session/new --> registerRequest
-        const publicKeyCredentialCreationOptions =
+        const { sessionId, userId, respJson } =
             await getServerSideCreationOptions(userName, pin)
+
+        const publicKeyCredentialCreationOptions = respJson
 
         const el_json_print = document.getElementById('jsonPrint')
         Object.assign(printed_data, {
@@ -92,7 +94,10 @@ async function register(userName, pin) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'X-Session-Id': sessionId,
+                'X-User-Id': userId,
             },
+            credentials: 'include',
             redirect: 'follow',
             referrer: 'no-referrer',
             body: JSON.stringify({
@@ -276,7 +281,22 @@ async function getServerSideCreationOptions(userName, pin) {
             service: 'sora',
         }),
     })
-    return await resp.json()
+
+    console.log(...resp.headers)
+
+    const sessionId = resp.headers.get('X-Session-Id')
+    const userId = resp.headers.get('X-User-Id')
+
+    console.log('SESSIONID: ', sessionId)
+    console.log('USERID: ', userId)
+
+    const respJson = await resp.json()
+
+    return {
+        respJson,
+        sessionId,
+        userId,
+    }
 }
 
 async function getServerSideRequestOptions(userName) {
