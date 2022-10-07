@@ -29,3 +29,7 @@ def
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# keys
+/src/ssl/**
+!/src/ssl/.gitkeep

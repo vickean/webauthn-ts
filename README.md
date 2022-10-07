@@ -27,12 +27,14 @@ You will need to perform the following on your development machine:
 2. Clone this repo
 3. Run `npm install` from the project root folder
 4. Copy [.env.example](.env.example) file and rename into `.env`. Change the variables wherever necessary.
-5. Run `npm run start`
+5. Remap `localhost` to `sora.dev.ringgitplus.com` to match the SSL certs for testing via editing the `hosts` file.
+6. Add `sora.dev.ringgitplus.com` cert and key files in the `/src/ssl` folder.
+7. Run `npm run start`s
 
 ## Working With This Project
 
-|  Command   | Description                                                                                                               |
-| :--------: | ------------------------------------------------------------------------------------------------------------------------- |
-|  `start`   | Runs the app in the development mode. Open [http://localhost:4430](http://localhost:4430) to view it in the browser.      |
-|   `css`    | Run the CLI tool to scan your template files for classes and build your CSS. Watches for any css changes if kept running. |
-| `prettify` | Formatting is done on covered files based on prettier config.                                                             |
+|  Command   | Description                                                                                                                                         |
+| :--------: | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+|  `start`   | Runs the app in the development mode. Open [https://sora.dev.ringgitplus.com:4430](http://sora.dev.ringgitplus.com:4430) to view it in the browser. |
+|   `css`    | Run the CLI tool to scan your template files for classes and build your CSS. Watches for any css changes if kept running.                           |
+| `prettify` | Formatting is done on covered files based on prettier config.                                                                                       |
