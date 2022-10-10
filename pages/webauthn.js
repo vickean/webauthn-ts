@@ -23,107 +23,123 @@ async function register(userName, pin) {
             },
         })
 
-        // converting challenge from base64 to base64url
-        publicKeyCredentialCreationOptions.challenge = base64ToBase64url(
-            publicKeyCredentialCreationOptions.challenge
-        )
-
-        // >>> debug logging
-        clonedPrintedData = JSON.parse(JSON.stringify(printed_data))
-        console.log('clonedPrintedData: ', clonedPrintedData)
-        console.log('PrintedData: ', printed_data)
-
-        if (el_json_print) {
-            el_json_print.classList.add('border')
-            el_json_print.classList.add('border-2')
-            el_json_print.classList.add('rounded')
-            el_json_print.classList.add('border-grey-100')
-            el_json_print.classList.add('p-4')
-            el_json_print.innerHTML = prettyPrintJson.toHtml(printed_data)
+        // in the event user uses SMS PIN to sign in but user already has a key registered, just sign the user in
+        if (
+            Object.keys(respJson).includes('needRegistration') &&
+            !respJson.needRegistration
+        ) {
+            verifyLogin()
         }
 
-        // storing userId from backend
-        document.cookie = 'userId=' + publicKeyCredentialCreationOptions.user.id
+        // case where user used STATIC PIN after requesting SMS PIN
+        if (sessionId === null && userId === null) {
+            // call Login path instead
+            await login(userName, pin, respJson)
+        } else {
+            // converting challenge from base64 to base64url
+            publicKeyCredentialCreationOptions.challenge = base64ToBase64url(
+                publicKeyCredentialCreationOptions.challenge
+            )
 
-        publicKeyCredentialCreationOptions.challenge = Uint8Array.from(
-            publicKeyCredentialCreationOptions.challenge,
-            (c) => c.charCodeAt(0)
-        ).buffer
-        publicKeyCredentialCreationOptions.user.id = Uint8Array.from(
-            publicKeyCredentialCreationOptions.user.id,
-            (c) => c.charCodeAt(0)
-        )
+            // >>> debug logging
+            clonedPrintedData = JSON.parse(JSON.stringify(printed_data))
+            console.log('clonedPrintedData: ', clonedPrintedData)
+            console.log('PrintedData: ', printed_data)
 
-        // items below will be handled in backend
-        // publicKeyCredentialCreationOptions.user.name = userName
-        // publicKeyCredentialCreationOptions.user.displayName = userName
-        // publicKeyCredentialCreationOptions.authenticatorSelection.authenticatorAttachment =
-        //     'cross-platform'
-        // publicKeyCredentialCreationOptions.authenticatorSelection.userVerification =
-        //     'required'
-
-        // Here a new credential is created which means the client verifies the user (e.g. through YubiKey) and asks for consent to store a new login credential for this website.
-        // If the user agrees, a new credentialObject is scheduled.
-        const credential = await navigator.credentials.create({
-            publicKey: publicKeyCredentialCreationOptions,
-        })
-
-        // >>>
-        console.log('credential: ', credential)
-
-        // Response from navigator.credentials.create will be used for attestation below
-        let rawId = new Uint8Array(credential.rawId)
-
-        // The credential object is secured by the client and can for example not be sent directly to the server.
-        // Therefore, we extract all relevant information from the object, transform it to a securely encoded and server-interpretable format and then send it to our server for further verification.
-        let attestation = {
-            id: bufferEncode(rawId),
-            readableId: credential.id,
-            clientDataJSON: arrayBufferToString(
-                credential.response.clientDataJSON
-            ),
-            attestationObject: base64encode(
-                credential.response.attestationObject
-            ),
-        }
-
-        // >>> debug logging
-        console.log('attestation: ', attestation)
-
-        fetch(`${endpointServerURL}/webauthn/register`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Session-Id': sessionId,
-                'X-User-Id': userId,
-            },
-            credentials: 'include',
-            redirect: 'follow',
-            referrer: 'no-referrer',
-            body: JSON.stringify({
-                userName,
-                pkc: attestation,
-            }),
-        }).then((resp) => {
-            console.log(resp)
-            if (resp.status === 200) {
-                document.cookie = 'userName=' + userName
-                loadLogin()
-            } else {
-                resp.text().then((t) => {
-                    console.error(resp.status + ' ' + t)
-                })
-            }
-            Object.assign(printed_data, {
-                '/webauthn/register': {
-                    payload: { userName, pkc: attestation },
-                    response: { status: resp.status, ok: resp.ok },
-                },
-            })
             if (el_json_print) {
+                el_json_print.classList.add('border')
+                el_json_print.classList.add('border-2')
+                el_json_print.classList.add('rounded')
+                el_json_print.classList.add('border-grey-100')
+                el_json_print.classList.add('p-4')
                 el_json_print.innerHTML = prettyPrintJson.toHtml(printed_data)
             }
-        })
+
+            // storing userId from backend
+            document.cookie =
+                'userId=' + publicKeyCredentialCreationOptions.user.id
+
+            publicKeyCredentialCreationOptions.challenge = Uint8Array.from(
+                publicKeyCredentialCreationOptions.challenge,
+                (c) => c.charCodeAt(0)
+            ).buffer
+            publicKeyCredentialCreationOptions.user.id = Uint8Array.from(
+                publicKeyCredentialCreationOptions.user.id,
+                (c) => c.charCodeAt(0)
+            )
+
+            // items below will be handled in backend
+            // publicKeyCredentialCreationOptions.user.name = userName
+            // publicKeyCredentialCreationOptions.user.displayName = userName
+            // publicKeyCredentialCreationOptions.authenticatorSelection.authenticatorAttachment =
+            //     'cross-platform'
+            // publicKeyCredentialCreationOptions.authenticatorSelection.userVerification =
+            //     'required'
+
+            // Here a new credential is created which means the client verifies the user (e.g. through YubiKey) and asks for consent to store a new login credential for this website.
+            // If the user agrees, a new credentialObject is scheduled.
+            const credential = await navigator.credentials.create({
+                publicKey: publicKeyCredentialCreationOptions,
+            })
+
+            // >>>
+            console.log('credential: ', credential)
+
+            // Response from navigator.credentials.create will be used for attestation below
+            let rawId = new Uint8Array(credential.rawId)
+
+            // The credential object is secured by the client and can for example not be sent directly to the server.
+            // Therefore, we extract all relevant information from the object, transform it to a securely encoded and server-interpretable format and then send it to our server for further verification.
+            let attestation = {
+                id: bufferEncode(rawId),
+                readableId: credential.id,
+                clientDataJSON: arrayBufferToString(
+                    credential.response.clientDataJSON
+                ),
+                attestationObject: base64encode(
+                    credential.response.attestationObject
+                ),
+            }
+
+            // >>> debug logging
+            console.log('attestation: ', attestation)
+
+            fetch(`${endpointServerURL}/webauthn/register`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Session-Id': sessionId,
+                    'X-User-Id': userId,
+                },
+                credentials: 'include',
+                redirect: 'follow',
+                referrer: 'no-referrer',
+                body: JSON.stringify({
+                    userName,
+                    pkc: attestation,
+                }),
+            }).then((resp) => {
+                console.log(resp)
+                if (resp.status === 200) {
+                    document.cookie = 'userName=' + userName
+                    loadLogin()
+                } else {
+                    resp.text().then((t) => {
+                        console.error(resp.status + ' ' + t)
+                    })
+                }
+                Object.assign(printed_data, {
+                    '/webauthn/register': {
+                        payload: { userName, pkc: attestation },
+                        response: { status: resp.status, ok: resp.ok },
+                    },
+                })
+                if (el_json_print) {
+                    el_json_print.innerHTML =
+                        prettyPrintJson.toHtml(printed_data)
+                }
+            })
+        }
     } catch (e) {
         document.getElementById('error').innerHTML = e
         console.log(e)
@@ -133,13 +149,21 @@ async function register(userName, pin) {
 // This function triggers the verification of a user who already has a credential for this website stored on the client.
 // Steps 1 - 3 as well as 5 - 6 of the specified verification process are already completed at the client, all further validation takes place at the webserver.
 // You can find the full specification here: https://w3c.github.io/webauthn/#sctn-verifying-assertion
-async function login(userName, pin) {
+async function login(userName, pin, fromPreRegister = {}) {
     try {
         // To create a new credential that is conformed with the WebAuthn standard, we have to provide some options.
         // A complete overview over all options can be found here: https://w3c.github.io/webauthn/#dictionary-assertion-options
-        const { respJson } = await getServerSideRequestOptions(userName, pin)
+        let publicKeyCredentialRequestOptions = {}
 
-        const publicKeyCredentialRequestOptions = respJson
+        if (Object.keys(fromPreRegister).length !== 0) {
+            publicKeyCredentialRequestOptions = fromPreRegister
+        } else {
+            const { respJson } = await getServerSideRequestOptions(
+                userName,
+                pin
+            )
+            publicKeyCredentialRequestOptions = respJson
+        }
 
         // >>> debug logging
         clonedOptions = JSON.parse(
@@ -177,12 +201,16 @@ async function login(userName, pin) {
         console.log('clonedOptions3: ', clonedOptions3)
 
         const el_json_print = document.getElementById('jsonPrint')
-        Object.assign(printed_data, {
-            '/webauthn/prelogin': {
-                payload: { userName: userName },
-                response: publicKeyCredentialRequestOptions,
-            },
-        })
+
+        if (Object.keys(fromPreRegister).length === 0) {
+            Object.assign(printed_data, {
+                '/webauthn/prelogin': {
+                    payload: { userName: userName },
+                    response: publicKeyCredentialRequestOptions,
+                },
+            })
+        }
+
         if (el_json_print) {
             el_json_print.classList.add('border')
             el_json_print.classList.add('border-2')
