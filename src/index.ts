@@ -15,6 +15,10 @@ const cert = fs.readFileSync(
     path.join(__dirname, '..', './src/ssl/sora.dev.ringgitplus.com.crt')
 )
 
+console.log(
+    path.join(__dirname, '..', './src/ssl/sora.dev.ringgitplus.com.key')
+)
+
 const app = express()
 dotenv.config()
 

@@ -44,7 +44,7 @@
                                 class="block text-gray-700 text-sm font-bold mb-2"
                                 for="password"
                             >
-                                Six Digit Pin
+                                Six Digit SMS Pin
                             </label>
                             <input
                                 type="password"
@@ -75,10 +75,43 @@
                                 again by logging in.
                             </p>
                         </div>
+                        <div class="mb-4">
+                            <label
+                                class="block text-gray-700 text-sm font-bold mb-2"
+                                for="login_uname"
+                            >
+                                Email
+                            </label>
+                            <input
+                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                type="text"
+                                placeholder="test@jirnexu.com"
+                                id="login_uname"
+                                oninput="validateLoginForm()"
+                            />
+                        </div>
+                        <div class="mb-4">
+                            <label
+                                class="block text-gray-700 text-sm font-bold mb-2"
+                                for="login_password"
+                            >
+                                Six Digit Static Pin
+                            </label>
+                            <input
+                                type="password"
+                                placeholder="123456"
+                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                id="login_password"
+                                maxlength="6"
+                                minlength="6"
+                                oninput="validateLoginForm()"
+                            />
+                        </div>
                         <div class="flex items-center justify-between">
                             <button
                                 id="login"
                                 class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                                disabled
                                 onclick="doLogin()"
                             >
                                 Login

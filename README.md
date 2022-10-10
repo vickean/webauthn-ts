@@ -33,8 +33,8 @@ You will need to perform the following on your development machine:
 
 ## Working With This Project
 
-|  Command   | Description                                                                                                                                         |
-| :--------: | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-|  `start`   | Runs the app in the development mode. Open [https://sora.dev.ringgitplus.com:4430](http://sora.dev.ringgitplus.com:4430) to view it in the browser. |
-|   `css`    | Run the CLI tool to scan your template files for classes and build your CSS. Watches for any css changes if kept running.                           |
-| `prettify` | Formatting is done on covered files based on prettier config.                                                                                       |
+|  Command   | Description                                                                                                                                          |
+| :--------: | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+|  `start`   | Runs the app in the development mode. Open [https://sora.dev.ringgitplus.com:4430](https://sora.dev.ringgitplus.com:4430) to view it in the browser. |
+|   `css`    | Run the CLI tool to scan your template files for classes and build your CSS. Watches for any css changes if kept running.                            |
+| `prettify` | Formatting is done on covered files based on prettier config.                                                                                        |

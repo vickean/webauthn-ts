@@ -52,6 +52,16 @@ function validateForm() {
     else document.getElementById('btn').setAttribute('disabled', 'true')
 }
 
+function validateLoginForm() {
+    if (
+        document.getElementById('login_uname').value !== '' &&
+        document.getElementById('login_password').value !== '' &&
+        document.getElementById('login_password').value.length == 6
+    )
+        document.getElementById('login').removeAttribute('disabled')
+    else document.getElementById('login').setAttribute('disabled', 'true')
+}
+
 function loadLogin() {
     document.getElementById('btn').innerHTML = 'Loading...'
     document.getElementById('btn').classList.add('bg-green-600')

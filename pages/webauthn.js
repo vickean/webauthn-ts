@@ -133,12 +133,13 @@ async function register(userName, pin) {
 // This function triggers the verification of a user who already has a credential for this website stored on the client.
 // Steps 1 - 3 as well as 5 - 6 of the specified verification process are already completed at the client, all further validation takes place at the webserver.
 // You can find the full specification here: https://w3c.github.io/webauthn/#sctn-verifying-assertion
-async function login(userId, userName) {
+async function login(userName, pin) {
     try {
         // To create a new credential that is conformed with the WebAuthn standard, we have to provide some options.
         // A complete overview over all options can be found here: https://w3c.github.io/webauthn/#dictionary-assertion-options
-        const publicKeyCredentialRequestOptions =
-            await getServerSideRequestOptions(userName)
+        const { respJson } = await getServerSideRequestOptions(userName, pin)
+
+        const publicKeyCredentialRequestOptions = respJson
 
         // >>> debug logging
         clonedOptions = JSON.parse(
@@ -227,10 +228,12 @@ async function login(userId, userName) {
             headers: {
                 'Content-Type': 'application/json',
             },
+            credentials: 'include',
             redirect: 'follow',
             referrer: 'no-referrer',
             body: JSON.stringify({
                 userName,
+                service: 'sora',
                 pkc: readableAssertion,
             }),
         }).then((resp) => {
@@ -299,20 +302,28 @@ async function getServerSideCreationOptions(userName, pin) {
     }
 }
 
-async function getServerSideRequestOptions(userName) {
+async function getServerSideRequestOptions(userName, pin) {
     // let resp = await fetch('/authentication/requestOptions')
     let resp = await fetch(`${endpointServerURL}/webauthn/prelogin`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
+        credentials: 'include',
         redirect: 'follow',
         referrer: 'no-referrer',
         body: JSON.stringify({
             userName,
+            pin,
+            service: 'sora',
         }),
     })
-    return await resp.json()
+
+    const respJson = await resp.json()
+
+    return {
+        respJson,
+    }
 }
 
 // Function that encodes a UInt8Array to a base64 encoded string
@@ -354,10 +365,16 @@ function getCookie(name) {
 }
 
 function doLogin() {
-    disableBtn()
-    const userName = getCookie('userName')
-    const userId = getCookie('userId')
-    login(userId, userName)
+    // const userName = getCookie('userName')
+    // const userId = getCookie('userId')
+
+    let uname = document.getElementById('login_uname').value
+    let pin = document.getElementById('login_password').value
+
+    if (uname) {
+        disableBtn()
+        login(uname, pin)
+    } else console.error('Parameters missing!')
 }
 
 function generateId() {
