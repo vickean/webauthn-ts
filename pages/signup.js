@@ -28,9 +28,10 @@ function clearCookies() {
 }
 
 function checkIfUserRegistered() {
-    const userId = getCookie('userId')
+    // const userId = getCookie('userId')
     const userName = getCookie('userName')
-    return !!userId && !!userName
+    // return !!userId && !!userName
+    return !!userName
 }
 
 window.addEventListener('load', (event) => {
@@ -53,11 +54,7 @@ function validateForm() {
 }
 
 function validateLoginForm() {
-    if (
-        document.getElementById('login_uname').value !== '' &&
-        document.getElementById('login_password').value !== '' &&
-        document.getElementById('login_password').value.length == 6
-    )
+    if (document.getElementById('login_uname').value !== '')
         document.getElementById('login').removeAttribute('disabled')
     else document.getElementById('login').setAttribute('disabled', 'true')
 }

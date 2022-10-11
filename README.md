@@ -38,3 +38,13 @@ You will need to perform the following on your development machine:
 |  `start`   | Runs the app in the development mode. Open [https://sora.dev.ringgitplus.com:4430](https://sora.dev.ringgitplus.com:4430) to view it in the browser. |
 |   `css`    | Run the CLI tool to scan your template files for classes and build your CSS. Watches for any css changes if kept running.                            |
 | `prettify` | Formatting is done on covered files based on prettier config.                                                                                        |
+
+## Integration Notes
+
+```
+Ideally, there should only be one form page that handles registration/login. This means that if the user intends to the register, they will need to fill in the Email and PIN and submit the form but if they want to login, they should only need to fill in the Email and submit.
+
+In the current state of the POC, I've left the register and login pages separate in the interest of time. Therefore, to reach the login page, you will need to "register" first then reload the page to reach the login page. Apologies for the inconvenience caused.
+
+- Victor K.
+```
