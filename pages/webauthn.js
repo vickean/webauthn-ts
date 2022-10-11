@@ -54,6 +54,10 @@ async function register(userName, pin) {
         // storing userId from backend
         document.cookie = 'userId=' + publicKeyCredentialCreationOptions.user.id
 
+        // storing userName even if user does not complete registration.
+        // mimics logging user in via SMS PIN and user skipping registration
+        document.cookie = 'userName=' + userName
+
         publicKeyCredentialCreationOptions.challenge = Uint8Array.from(
             publicKeyCredentialCreationOptions.challenge,
             (c) => c.charCodeAt(0)
@@ -116,7 +120,7 @@ async function register(userName, pin) {
         }).then((resp) => {
             console.log(resp)
             if (resp.status === 200) {
-                document.cookie = 'userName=' + userName
+                // document.cookie = 'userName=' + userName
                 loadLogin()
             } else {
                 resp.text().then((t) => {
